@@ -1,5 +1,5 @@
 STUID = 231098166
-STUNAME = Chen Zhan
+STUNAME = ChenZhan
 
 # DO NOT modify the following code!!!
 
