@@ -13,12 +13,21 @@
  * See the Mulan PSL v2 for more details.
  ***************************************************************************************/
 
-#include <isa.h>
+// #include <isa.h> it should be add again (cz)
 
 /* We use the POSIX regex functions to process regular expressions.
  * Type 'man regex' for more information about POSIX regex functions.
  */
+#define Log(fmt, ...) printf(fmt "\n", ##__VA_ARGS__)
 #include <regex.h>
+#include <stdio.h>
+#include <string.h>
+#include <stdlib.h>
+#include <stdbool.h>
+#include <assert.h>
+
+typedef unsigned int uint32_t;
+
 enum
 {
   TK_NOTYPE = 256, // 空格串
@@ -44,17 +53,17 @@ static struct rule
      * Pay attention to the precedence level of different rules.
      */
 
-    {" +", TK_NOTYPE},        // 空格串
-    {"==", TK_EQ},            // 双等号
-    {"\\+", TK_ADD},          // 加号
-    {"-", TK_MINUS},          // 减号
-    {"\\*", TK_MULTIPLE},     // 乘号
-    {"/", TK_DIVIDE},         // 除号
-    {"\$", TK_LEFT_BRACKET},  // 左括号
-    {"\$", TK_RIGHT_BRACKET}, // 右括号
-    {"[0-9]+", TK_NUM},       // 十进制整数
+    {" +", TK_NOTYPE},         // 空格串
+    {"==", TK_EQ},             // 双等号
+    {"\\+", TK_ADD},           // 加号
+    {"-", TK_MINUS},           // 减号
+    {"\\*", TK_MULTIPLE},      // 乘号
+    {"/", TK_DIVIDE},          // 除号
+    {"\\(", TK_LEFT_BRACKET},  // 左括号
+    {"\\)", TK_RIGHT_BRACKET}, // 右括号
+    {"[0-9]+", TK_NUM},        // 十进制整数
 };
-#define NR_REGEX ARRLEN(rules)
+#define NR_REGEX (sizeof(rules) / sizeof(rules[0]))
 
 static regex_t re[NR_REGEX] = {};
 
@@ -73,7 +82,8 @@ void init_regex()
     if (ret != 0)
     {
       regerror(ret, &re[i], error_msg, 128);
-      panic("regex compilation failed: %s\n%s", error_msg, rules[i].regex);
+      printf("regex compilation failed: %s\n%s\n", error_msg, rules[i].regex);
+      exit(1);
     }
   }
 }
@@ -84,7 +94,7 @@ typedef struct token
   char str[32];
 } Token;
 
-static Token tokens[32] __attribute__((used)) = {};
+static Token tokens[10010] __attribute__((used)) = {}; // it is 32 actually (cz)
 static int nr_token __attribute__((used)) = 0;
 
 static bool make_token(char *e)
@@ -110,15 +120,60 @@ static bool make_token(char *e)
 
         position += substr_len;
 
-        /* TODO: Now a new token is recognized with rules[i]. Add codes
-         * to record the token in the array `tokens'. For certain types
-         * of tokens, some extra actions should be performed.
-         */
-
+        /* 记录 token 到 tokens 数组 */
         switch (rules[i].token_type)
         {
+        case TK_NOTYPE:
+          /* 忽略空白字符 */
+          break;
+        case TK_NUM:
+          if (nr_token >= 32)
+          {
+            printf("Error: too many tokens\n");
+            return false;
+          }
+          tokens[nr_token].type = TK_NUM;
+          if (substr_len < sizeof(tokens[nr_token].str))
+          {
+            strncpy(tokens[nr_token].str, substr_start, substr_len);
+            tokens[nr_token].str[substr_len] = '\0'; // 添加字符串终止符
+          }
+          else
+          {
+            strncpy(tokens[nr_token].str, substr_start, sizeof(tokens[nr_token].str) - 1);
+            tokens[nr_token].str[sizeof(tokens[nr_token].str) - 1] = '\0';
+          }
+          nr_token++;
+          break;
+        case TK_ADD:
+        case TK_MINUS:
+        case TK_MULTIPLE:
+        case TK_DIVIDE:
+        case TK_LEFT_BRACKET:
+        case TK_RIGHT_BRACKET:
+        case TK_EQ:
+          if (nr_token >= 32)
+          {
+            printf("Error: too many tokens\n");
+            return false;
+          }
+          tokens[nr_token].type = rules[i].token_type;
+          if (substr_len < sizeof(tokens[nr_token].str))
+          {
+            strncpy(tokens[nr_token].str, substr_start, substr_len);
+            tokens[nr_token].str[substr_len] = '\0';
+          }
+          else
+          {
+            strncpy(tokens[nr_token].str, substr_start, sizeof(tokens[nr_token].str) - 1);
+            tokens[nr_token].str[sizeof(tokens[nr_token].str) - 1] = '\0';
+          }
+          nr_token++;
+          break;
         default:
-          TODO();
+          /* 处理未知的 token 类型 */
+          printf("Unknown token type: %d\n", rules[i].token_type);
+          return false;
         }
 
         break;
@@ -135,7 +190,136 @@ static bool make_token(char *e)
   return true;
 }
 
-word_t expr(char *e, bool *success)
+static bool check_parentheses(int p, int q)
+{
+  if (tokens[p].type != TK_LEFT_BRACKET || tokens[q].type != TK_RIGHT_BRACKET)
+    return false;
+
+  int stack = 0;
+  for (int i = p; i <= q; i++)
+  {
+    if (tokens[i].type == TK_LEFT_BRACKET)
+      stack++;
+    else if (tokens[i].type == TK_RIGHT_BRACKET)
+      stack--;
+
+    if (stack == 0 && i < q)
+      return false;
+  }
+
+  return stack == 0;
+}
+
+static int find_main_operator(int p, int q)
+{
+  int min_precedence = 1000;
+  int main_op = -1;
+  int stack = 0;
+
+  /* 定义运算符的优先级
+   * 优先级从低到高: == (0) < +,- (1) < *,/ (2)
+   */
+  int precedence[] = {
+      [TK_EQ] = 0,
+      [TK_ADD] = 1,
+      [TK_MINUS] = 1,
+      [TK_MULTIPLE] = 2,
+      [TK_DIVIDE] = 2};
+
+  for (int i = p; i <= q; i++)
+  {
+    if (tokens[i].type == TK_LEFT_BRACKET)
+    {
+      stack++;
+      continue;
+    }
+    if (tokens[i].type == TK_RIGHT_BRACKET)
+    {
+      stack--;
+      continue;
+    }
+    if (stack == 0)
+    {
+      int current_precedence = precedence[tokens[i].type];
+      if (current_precedence <= min_precedence)
+      {
+        min_precedence = current_precedence;
+        main_op = i;
+      }
+    }
+  }
+
+  return main_op;
+}
+
+static uint32_t eval(int p, int q, bool *success)
+{
+  if (p > q)
+  {
+    /* 错误的表达式 */
+    *success = false;
+    return 0;
+  }
+  else if (p == q)
+  {
+    /* 单个 token，应该是一个数字 */
+    if (tokens[p].type != TK_NUM)
+    {
+      *success = false;
+      return 0;
+    }
+    return strtoul(tokens[p].str, NULL, 10);
+  }
+  else if (check_parentheses(p, q))
+  {
+    /* 表达式被括号包围，去掉括号 */
+    return eval(p + 1, q - 1, success);
+  }
+  else
+  {
+    /* 寻找主运算符 */
+    int op = find_main_operator(p, q);
+    if (op == -1)
+    {
+      /* 没有找到主运算符 */
+      *success = false;
+      return 0;
+    }
+
+    uint32_t val1 = eval(p, op - 1, success);
+    if (!(*success))
+      return 0;
+    uint32_t val2 = eval(op + 1, q, success);
+    if (!(*success))
+      return 0;
+
+    switch (tokens[op].type)
+    {
+    case TK_ADD:
+      return val1 + val2;
+    case TK_MINUS:
+      return val1 - val2;
+    case TK_MULTIPLE:
+      return val1 * val2;
+    case TK_DIVIDE:
+      if (val2 == 0)
+      {
+        printf("Error: Division by zero\n");
+        *success = false;
+        return 0;
+      }
+      return val1 / val2;
+    case TK_EQ:
+      return val1 == val2;
+    default:
+      printf("Error: Unknown operator type %d\n", tokens[op].type);
+      *success = false;
+      return 0;
+    }
+  }
+}
+
+uint32_t expr(char *e, bool *success)
 {
   if (!make_token(e))
   {
@@ -143,8 +327,36 @@ word_t expr(char *e, bool *success)
     return 0;
   }
 
-  /* TODO: Insert codes to evaluate the expression. */
-  TODO();
+  /* 打印 tokens，便于调试 */
+
+  for (int i = 0; i < nr_token; i++)
+  {
+    printf("tokens[%d]: type=%d, str=%s\n", i, tokens[i].type, tokens[i].str);
+  }
+
+  *success = true;
+  return eval(0, nr_token - 1, success);
+}
+
+/* 测试主函数 */
+int main(int argc, char *argv[])
+{
+  if (argc < 2)
+  {
+    printf("Usage: %s \"expression\"\n", argv[0]);
+    return 0;
+  }
+
+  init_regex();
+
+  char *e = argv[1];
+  bool success = false;
+  uint32_t result = expr(e, &success);
+
+  if (success)
+    printf("Result = %u\n", result);
+  else
+    printf("Error in expression.\n");
 
   return 0;
 }
