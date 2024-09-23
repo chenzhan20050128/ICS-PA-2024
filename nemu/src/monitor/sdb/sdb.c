@@ -65,7 +65,14 @@ static int cmd_si(char *args)
     return 0;
   }
   int num = atoi(arg);
-  cpu_exec(num);
+  if (num == 0 && strcmp(arg, "0") != 0)
+  {
+    printf("Error:invalid num\n");
+  }
+  else
+  {
+    cpu_exec(num);
+  }
 }
 static int cmd_info(char *args)
 {
