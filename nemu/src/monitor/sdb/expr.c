@@ -1,4 +1,3 @@
-
 /***************************************************************************************
  * Copyright (c) 2014-2024 Zihao Yu, Nanjing University
  *
@@ -14,18 +13,15 @@
  * See the Mulan PSL v2 for more details.
  ***************************************************************************************/
 
-// #include <isa.h> it should be add again (cz)
-
-/* We use the POSIX regex functions to process regular expressions.
- * Type 'man regex' for more information about POSIX regex functions.
- */
-#define Log(fmt, ...) printf(fmt "\n", ##__VA_ARGS__)
+// #define Log(fmt, ...) printf(fmt "\n", ##__VA_ARGS__)
 #include <regex.h>
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
 #include <stdbool.h>
 #include <assert.h>
+// #include <isa.h>
+// #include "../../include/memory/vaddr.h"
 
 typedef unsigned int uint32_t;
 
@@ -33,15 +29,26 @@ enum
 {
   TK_NOTYPE = 256, // 空格串
   TK_EQ,           // 双等号
-  TK_NUM,          // 十进制整数
+  TK_LT,           // 小于
+  TK_LE,           // 小于等于
+  TK_GT,           // 大于
+  TK_GE,           // 大于等于
+  TK_NEQ,          // 不等于
+
+  TK_NUM, // 十进制整数
+  TK_HEX, // 十六进制数
+  TK_REG, // 寄存器
 
   /* TODO: Add more token types */
-  TK_ADD,          // 加号
-  TK_MINUS,        // 减号
-  TK_MULTIPLE,     // 乘号
-  TK_DIVIDE,       // 除号
-  TK_LEFT_BRACKET, // 左括号
-  TK_RIGHT_BRACKET // 右括号
+  TK_ADD,           // 加号
+  TK_MINUS,         // 减号
+  TK_MULTIPLE,      // 乘号
+  TK_DIVIDE,        // 除号
+  TK_LEFT_BRACKET,  // 左括号
+  TK_RIGHT_BRACKET, // 右括号
+  TK_DEREF,         // 指针解引用
+  TK_NEGATIVE
+
 };
 
 static struct rule
@@ -53,17 +60,24 @@ static struct rule
     /* TODO: Add more rules.
      * Pay attention to the precedence level of different rules.
      */
+    {" +", TK_NOTYPE},                     // 空格串
+    {"==", TK_EQ},                         // 双等号
+    {"<=", TK_LE},                         // 小于等于
+    {"<", TK_LT},                          // 小于
+    {">=", TK_GE},                         // 大于等于
+    {">", TK_GT},                          // 大于
+    {"!=", TK_NEQ},                        // 不等于
+    {"\\+", TK_ADD},                       // 加号
+    {"-", TK_MINUS},                       // 减号
+    {"\\*", TK_MULTIPLE},                  // 乘号
+    {"/", TK_DIVIDE},                      // 除号
+    {"\$", TK_LEFT_BRACKET},               // 左括号
+    {"\$", TK_RIGHT_BRACKET},              // 右括号
+    {"0x[0-9a-fA-F]+", TK_HEX},            // 十六进制数
+    {"\\$[a-zA-Z_][a-zA-Z0-9_]*", TK_REG}, // 寄存器
+    {"[0-9]+", TK_NUM},                    // 十进制整数
+}; // notice ! there are no TK_DEREF! because it is same as TK_MULTIPLE literally!there are also no TK_NEGATIVE
 
-    {" +", TK_NOTYPE},         // 空格串
-    {"==", TK_EQ},             // 双等号
-    {"\\+", TK_ADD},           // 加号
-    {"-", TK_MINUS},           // 减号
-    {"\\*", TK_MULTIPLE},      // 乘号
-    {"/", TK_DIVIDE},          // 除号
-    {"\\(", TK_LEFT_BRACKET},  // 左括号
-    {"\\)", TK_RIGHT_BRACKET}, // 右括号
-    {"[0-9]+", TK_NUM},        // 十进制整数
-};
 #define NR_REGEX (sizeof(rules) / sizeof(rules[0]))
 #define TOKENS_NUM 10010 // cz 0923 14:27
 static regex_t re[NR_REGEX] = {};
@@ -116,9 +130,6 @@ static bool make_token(char *e)
         char *substr_start = e + position;
         int substr_len = pmatch.rm_eo;
 
-        // Log("match rules[%d] = \"%s\" at position %d with len %d: %.*s",
-        //   i, rules[i].regex, position, substr_len, substr_len, substr_start);
-
         position += substr_len;
 
         /* 记录 token 到 tokens 数组 */
@@ -128,12 +139,14 @@ static bool make_token(char *e)
           /* 忽略空白字符 */
           break;
         case TK_NUM:
+        case TK_HEX:
+        case TK_REG:
           if (nr_token >= TOKENS_NUM)
           {
             printf("Error: too many tokens\n");
             return false;
           }
-          tokens[nr_token].type = TK_NUM;
+          tokens[nr_token].type = rules[i].token_type;
           if (substr_len < sizeof(tokens[nr_token].str))
           {
             strncpy(tokens[nr_token].str, substr_start, substr_len);
@@ -153,6 +166,11 @@ static bool make_token(char *e)
         case TK_LEFT_BRACKET:
         case TK_RIGHT_BRACKET:
         case TK_EQ:
+        case TK_NEQ:
+        case TK_GE:
+        case TK_GT:
+        case TK_LE:
+        case TK_LT:
           if (nr_token >= TOKENS_NUM)
           {
             printf("Error: too many tokens\n");
@@ -222,10 +240,17 @@ static int find_main_operator(int p, int q)
    */
   int precedence[] = {
       [TK_EQ] = 0,
+      [TK_NEQ] = 0,
+      [TK_LE] = 0,
+      [TK_LT] = 0,
+      [TK_GE] = 0,
+      [TK_GT] = 0,
       [TK_ADD] = 1,
       [TK_MINUS] = 1,
       [TK_MULTIPLE] = 2,
-      [TK_DIVIDE] = 2};
+      [TK_DIVIDE] = 2,
+      [TK_DEREF] = 3,
+      [TK_NEGATIVE] = 4};
 
   for (int i = p; i <= q; i++)
   {
@@ -239,7 +264,7 @@ static int find_main_operator(int p, int q)
       stack--;
       continue;
     }
-    if (stack == 0 && tokens[i].type != TK_NUM)
+    if (stack == 0 && tokens[i].type != TK_NUM && tokens[i].type != TK_HEX && tokens[i].type != TK_REG)
     {
       int current_precedence = precedence[tokens[i].type];
       if (current_precedence <= min_precedence)
@@ -263,13 +288,28 @@ static uint32_t eval(int p, int q, bool *success)
   }
   else if (p == q)
   {
-    /* 单个 token，应该是一个数字 */
-    if (tokens[p].type != TK_NUM)
+    /* 单个 token，应该是一个数字、十六进制数或寄存器 */
+    if (tokens[p].type == TK_NUM)
     {
-      *success = false;
-      return 0;
+      return strtoul(tokens[p].str, NULL, 10);
     }
-    return strtoul(tokens[p].str, NULL, 10);
+    else if (tokens[p].type == TK_HEX)
+    {
+      return strtoul(tokens[p].str + 2, NULL, 16); // 跳过"0x"
+    }
+    else if (tokens[p].type == TK_REG)
+    {
+      bool success_reg;
+      uint32_t reg_val = isa_reg_str2val(tokens[p].str + 1, &success_reg); // 跳过"$"
+      if (!success_reg)
+      {
+        *success = false;
+        return 0;
+      }
+      return reg_val;
+    }
+    *success = false;
+    return 0;
   }
   else if (check_parentheses(p, q))
   {
@@ -316,6 +356,20 @@ static uint32_t eval(int p, int q, bool *success)
       return val1 / val2;
     case TK_EQ:
       return val1 == val2;
+    case TK_NEQ:
+      return val1 != val2;
+    case TK_LT:
+      return val1 < val2;
+    case TK_LE:
+      return val1 <= val2;
+    case TK_GT:
+      return val1 > val2;
+    case TK_GE:
+      return val1 >= val2;
+    case TK_DEREF:
+      return vaddr_read(val1, 4); // 32bit riscv should 4B len(cz)
+    case TK_NEGATIVE:
+      return (-1) * val1;
     default:
       printf("Error: Unknown operator type %d\n", tokens[op].type);
       *success = false;
@@ -341,15 +395,47 @@ uint32_t expr(char *e, bool *success)
   */
 
   *success = true;
+
+  for (int i = 0; i < nr_token; i++)
+  {
+    if (i == 0 || tokens[i - 1].type == TK_LEFT_BRACKET ||
+        tokens[i - 1].type == TK_ADD ||
+        tokens[i - 1].type == TK_MINUS ||
+        tokens[i - 1].type == TK_MULTIPLE ||
+        tokens[i - 1].type == TK_DIVIDE ||
+        tokens[i - 1].type == TK_DEREF ||
+        tokens[i - 1].type == TK_EQ ||
+        tokens[i - 1].type == TK_NEQ ||
+        tokens[i - 1].type == TK_LT ||
+        tokens[i - 1].type == TK_LE ||
+        tokens[i - 1].type == TK_GT ||
+        tokens[i - 1].type == TK_GE ||
+        tokens[i - 1].type == TK_RIGHT_BRACKET)
+    {
+      if (tokens[i].type == TK_MULTIPLE)
+      {
+        tokens[i].type = TK_DEREF; // 改为指针解引用类型
+      }
+      else if (tokens[i].type == TK_MINUS)
+      {
+        tokens[i].type = TK_NEGATIVE;
+      }
+      else
+      {
+      }
+    }
+  }
+
   return eval(0, nr_token - 1, success);
 }
 
-/* 测试主函数
+/* 测试主函数*/
 int main(int argc, char *argv[])
 {
   FILE *output_file = fopen("output_expression.txt", "w");
   assert(output_file != NULL);
 
+  printf("Hello!Please write the answer and expression:\n");
   int num_tests = 0;
   scanf("%d", &num_tests); // 读取测试的数量
   fprintf(output_file, "num_tests:%d\n", num_tests);
@@ -379,4 +465,3 @@ int main(int argc, char *argv[])
   fclose(output_file);
   return 0;
 }
-*/
