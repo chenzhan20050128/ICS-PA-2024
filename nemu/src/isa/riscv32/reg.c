@@ -28,10 +28,9 @@ void isa_reg_display()
 {
   for (int i = 0; i < sizeof(regs) / sizeof(regs[0]); i++)
   {
-    printf("%-4s0x%016lx %20ld\n", regs[i], cpu.gpr[i], cpu.gpr[i]);
+    printf("%-4s0x%08x %10u\n", regs[i], cpu.gpr[i], cpu.gpr[i]);
   }
-  // align the space,GDB format
-  printf("pc  0x%016lx %20ld\n", cpu.pc, cpu.pc);
+  printf("pc  0x%08x %10u\n", cpu.pc, cpu.pc);
 }
 
 word_t isa_reg_str2val(const char *s, bool *success)

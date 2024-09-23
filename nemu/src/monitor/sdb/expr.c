@@ -344,7 +344,7 @@ uint32_t expr(char *e, bool *success)
   return eval(0, nr_token - 1, success);
 }
 
-/* 测试主函数 */
+/* 测试主函数
 int main(int argc, char *argv[])
 {
   FILE *output_file = fopen("output_expression.txt", "w");
@@ -379,3 +379,4 @@ int main(int argc, char *argv[])
   fclose(output_file);
   return 0;
 }
+*/

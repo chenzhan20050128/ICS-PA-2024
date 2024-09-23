@@ -18,6 +18,7 @@
 #include <readline/readline.h>
 #include <readline/history.h>
 #include "sdb.h"
+#include <memory/vaddr.h>
 
 static int is_batch_mode = false;
 
@@ -73,6 +74,7 @@ static int cmd_si(char *args)
   {
     cpu_exec(num);
   }
+  return 0;
 }
 static int cmd_info(char *args)
 {
@@ -95,7 +97,7 @@ static int cmd_x(char *args)
   int repeat_num = atoi(arg);
   arg = strtok(NULL, " ");
   bool success;
-  word_t address = expr(arg, success);
+  word_t address = expr(arg, &success);
   if (success)
   {
     for (int i = 0; i < repeat_num; i++)
@@ -115,7 +117,9 @@ static int cmd_x(char *args)
   else
   {
     printf("Unknown expressions '%s'\n", arg);
+    return -1;
   }
+  return 0;
 }
 // 表达式求值	p EXPR	p $eax + 1	求出表达式EXPR的值, EXPR支持的
 // 运算请见调试中的表达式求值小节
@@ -123,12 +127,15 @@ static int cmd_x(char *args)
 // 删除监视点	d N	d 2	删除序号为N的监视点
 static int cmd_p(char *args)
 {
+  return 0;
 }
 static int cmd_w(char *args)
 {
+  return 0;
 }
 static int cmd_d(char *args)
 {
+  return 0;
 }
 
 static int cmd_help(char *args);
