@@ -4,6 +4,7 @@
 #include <time.h>
 #include <assert.h>
 #include <string.h>
+#include <limits.h>
 
 static char buf[65536] = {};
 static char code_buf[65536 + 128] = {}; // 为 C 代码缓冲区预留更多空间
@@ -17,109 +18,181 @@ static char *code_format =
 
 static int num_parentheses = 0; // 记录括号的数量，保证括号匹配
 
-static char *gen_rand_subexpr()
+#define USE_NEGATIVE_NUMBERS
+#define EXPR_MAX_LENGTH 10
+
+static char *gen_rand_subexpr();
+
+static void ensure_no_div_zero(char *subexpr)
+{
+  while (strstr(subexpr, "/ 0") != NULL || strstr(subexpr, "/0") != NULL)
+  {
+    free(subexpr);
+    subexpr = gen_rand_subexpr(EXPR_MAX_LENGTH);
+  }
+}
+
+static char *gen_rand_subexpr(int maxLength)
 {
   char *subexpr = malloc(65536 * sizeof(char));
   subexpr[0] = '\0';
-  int choice = rand() % 3; // 选择 0, 1 或 2
+  int choice;
+  if (maxLength <= 1)
+  {
+    choice = rand() % 2;
+  }
+  else
+  {
+    if (maxLength == EXPR_MAX_LENGTH)
+    {
+      choice = 2; // not allow the single num,to make the expression length longer.(cz)
+    }
+    else
+    {
+      choice = rand() % 3;
+    }
+  }
+
   char *temp;
-  // 选择生成数字、括号或运算符
+
   switch (choice)
   {
   case 0:
   {
-    // 生成一个数字
-    char num_buf[10];
-    sprintf(num_buf, "%u", rand() % 10); // 生成 0 到 9 的随机数
+    char num_buf[100];
+    unsigned num = rand() % 10;  // 生成 0 到 9 的随机无符号数
+    sprintf(num_buf, "%u", num); // 确保数字是无符号的
     strcat(subexpr, num_buf);
     break;
   }
   case 1:
   {
-    // 生成带括号的表达式，确保括号匹配
     strcat(subexpr, "(");
-    num_parentheses++; // 左括号增加
-    temp = gen_rand_subexpr();
-    strcat(subexpr, temp); // 生成递归表达式
+    num_parentheses++;
+    temp = gen_rand_subexpr(maxLength - 1);
+    strcat(subexpr, temp);
     free(temp);
     strcat(subexpr, ")");
-    num_parentheses--; // 右括号减少
+    num_parentheses--;
     break;
   }
   default:
   {
-    // 生成二元运算的表达式
-    temp = gen_rand_subexpr();
-    strcat(subexpr, temp); // 生成递归表达式
-    free(temp);
-    if (rand() % 4 == 0)
+    char *left = gen_rand_subexpr(maxLength / 2);
+    strcat(subexpr, left);
+    free(left);
+
+    if (rand() % 2 == 0)
     {
       strcat(subexpr, " ");
     }
+
     char op_buf[4];
-    sprintf(op_buf, "%c", "+-*"[rand() % 3]); // 随机选择 +, -, *
+    char op = "+-*/"[rand() % 4];
+    sprintf(op_buf, "%c", op);
     strcat(subexpr, op_buf);
-    if (rand() % 4 == 0)
+
+    if (rand() % 2 == 0)
     {
       strcat(subexpr, " ");
     }
-    temp = gen_rand_subexpr();
-    strcat(subexpr, temp); // 生成递归表达式
-    free(temp);
+
+    char *right = gen_rand_subexpr(maxLength / 2);
+
+    while (op == '/' && strcmp(right, "0") == 0)
+    {
+      free(right);
+      right = gen_rand_subexpr(maxLength / 2);
+    }
+
+    strcat(subexpr, right);
+    free(right);
+
     break;
   }
   }
+
+  ensure_no_div_zero(subexpr);
   return subexpr;
+}
+
+static int try_eval_expr()
+{
+  sprintf(code_buf, code_format, buf);
+
+  FILE *fp = fopen("/tmp/.code.c", "w");
+  assert(fp != NULL);
+  fputs(code_buf, fp);
+  fclose(fp);
+
+  int ret = system("gcc /tmp/.code.c -o /tmp/.expr");
+  if (ret != 0)
+    return -1;
+
+  fp = popen("/tmp/.expr", "r");
+  assert(fp != NULL);
+
+  unsigned result;
+  ret = fscanf(fp, "%u", &result);
+  pclose(fp);
+
+  if (ret != 1)
+    return -1;
+
+  return result;
 }
 
 static void gen_rand_expr()
 {
-  char *subexpr = gen_rand_subexpr();
-  strncpy(buf, subexpr, 65536);
-  free(subexpr);
-}
-
-int main(int argc, char *argv[])
-{
-  int seed = time(0);
-  srand(seed);  // 初始化随机种子
-  int loop = 1; // 默认循环次数
-  if (argc > 1)
+  int result;
+  do
   {
-    sscanf(argv[1], "%d", &loop);
-  }
-  for (int i = 0; i < loop; i++)
-  {
-    gen_rand_expr(); // 生成随机表达式
+    char *subexpr = gen_rand_subexpr(EXPR_MAX_LENGTH);
+    strncpy(buf, subexpr, 65536);
+    free(subexpr);
 
-    // 如果有未闭合的括号，补齐右括号
     while (num_parentheses > 0)
     {
       strcat(buf, ")");
       num_parentheses--;
     }
 
-    sprintf(code_buf, code_format, buf); // 格式化代码
+    result = try_eval_expr();
+  } while (result == -1);
 
-    FILE *fp = fopen("/tmp/.code.c", "w");
-    assert(fp != NULL);
-    fputs(code_buf, fp);
-    fclose(fp);
+  FILE *output_file = fopen("input_expression.txt", "a");
+  assert(output_file != NULL);
+  fprintf(output_file, "%u %s\n", result, buf);
+  fclose(output_file);
 
-    int ret = system("gcc /tmp/.code.c -o /tmp/.expr"); // 编译 C 代码
-    if (ret != 0)
-      continue;
+  // printf("%u %s\n", result, buf);
+}
 
-    fp = popen("/tmp/.expr", "r"); // 执行生成的程序
-    assert(fp != NULL);
-
-    int result;
-    ret = fscanf(fp, "%d", &result); // 获取计算结果
-    pclose(fp);
-
-    printf("%u %s\n", result, buf); // 输出结果和表达式
+int main(int argc, char *argv[])
+{
+  int seed = time(0);
+  srand(seed);
+  int loop = 1; // 默认循环次数
+  if (argc > 1)
+  {
+    sscanf(argv[1], "%d", &loop);
   }
+
+  // print the loop in input_expression.txt cz 0923 13:47
+  FILE *output_file = fopen("input_expression.txt", "w");
+  assert(output_file != NULL);
+  fprintf(output_file, "%d\n", loop);
+  fclose(output_file);
+
+  for (int i = 0; i < loop; i++)
+  {
+    if (i % 100 == 0)
+    {
+      printf("Generate i'th input expression:%d\n", i);
+    }
+    gen_rand_expr(); // 生成随机表达式
+  }
+  printf("Generate input expressions finished\n");
+
   return 0;
 }
-// 20240922 21:53 finish generating the expr
-// but it could overflow the int

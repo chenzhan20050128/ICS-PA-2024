@@ -1,3 +1,4 @@
+
 /***************************************************************************************
  * Copyright (c) 2014-2024 Zihao Yu, Nanjing University
  *
@@ -64,7 +65,7 @@ static struct rule
     {"[0-9]+", TK_NUM},        // 十进制整数
 };
 #define NR_REGEX (sizeof(rules) / sizeof(rules[0]))
-
+#define TOKENS_NUM 10010 // cz 0923 14:27
 static regex_t re[NR_REGEX] = {};
 
 /* Rules are used for many times.
@@ -94,7 +95,7 @@ typedef struct token
   char str[32];
 } Token;
 
-static Token tokens[10010] __attribute__((used)) = {}; // it is 32 actually (cz)
+static Token tokens[TOKENS_NUM] __attribute__((used)) = {};
 static int nr_token __attribute__((used)) = 0;
 
 static bool make_token(char *e)
@@ -115,8 +116,8 @@ static bool make_token(char *e)
         char *substr_start = e + position;
         int substr_len = pmatch.rm_eo;
 
-        Log("match rules[%d] = \"%s\" at position %d with len %d: %.*s",
-            i, rules[i].regex, position, substr_len, substr_len, substr_start);
+        // Log("match rules[%d] = \"%s\" at position %d with len %d: %.*s",
+        //   i, rules[i].regex, position, substr_len, substr_len, substr_start);
 
         position += substr_len;
 
@@ -127,7 +128,7 @@ static bool make_token(char *e)
           /* 忽略空白字符 */
           break;
         case TK_NUM:
-          if (nr_token >= 32)
+          if (nr_token >= TOKENS_NUM)
           {
             printf("Error: too many tokens\n");
             return false;
@@ -152,7 +153,7 @@ static bool make_token(char *e)
         case TK_LEFT_BRACKET:
         case TK_RIGHT_BRACKET:
         case TK_EQ:
-          if (nr_token >= 32)
+          if (nr_token >= TOKENS_NUM)
           {
             printf("Error: too many tokens\n");
             return false;
@@ -238,7 +239,7 @@ static int find_main_operator(int p, int q)
       stack--;
       continue;
     }
-    if (stack == 0)
+    if (stack == 0 && tokens[i].type != TK_NUM)
     {
       int current_precedence = precedence[tokens[i].type];
       if (current_precedence <= min_precedence)
@@ -285,14 +286,18 @@ static uint32_t eval(int p, int q, bool *success)
       *success = false;
       return 0;
     }
-
     uint32_t val1 = eval(p, op - 1, success);
     if (!(*success))
+    {
+      printf("Error:Val1 don't success\n");
       return 0;
+    }
     uint32_t val2 = eval(op + 1, q, success);
     if (!(*success))
+    {
+      printf("Error:Val2 don't success\n");
       return 0;
-
+    }
     switch (tokens[op].type)
     {
     case TK_ADD:
@@ -328,11 +333,12 @@ uint32_t expr(char *e, bool *success)
   }
 
   /* 打印 tokens，便于调试 */
-
+  /*
   for (int i = 0; i < nr_token; i++)
   {
     printf("tokens[%d]: type=%d, str=%s\n", i, tokens[i].type, tokens[i].str);
   }
+  */
 
   *success = true;
   return eval(0, nr_token - 1, success);
@@ -341,22 +347,35 @@ uint32_t expr(char *e, bool *success)
 /* 测试主函数 */
 int main(int argc, char *argv[])
 {
-  if (argc < 2)
-  {
-    printf("Usage: %s \"expression\"\n", argv[0]);
-    return 0;
-  }
+  FILE *output_file = fopen("output_expression.txt", "w");
+  assert(output_file != NULL);
+
+  int num_tests = 0;
+  scanf("%d", &num_tests); // 读取测试的数量
+  fprintf(output_file, "num_tests:%d\n", num_tests);
 
   init_regex();
 
-  char *e = argv[1];
-  bool success = false;
-  uint32_t result = expr(e, &success);
+  for (int i = 0; i < num_tests; i++)
+  {
+    uint32_t expected_result;
+    char expression[65536];
+    // 读取期望值和表达式
+    scanf("%u %[^\n]s", &expected_result, expression);
 
-  if (success)
-    printf("Result = %u\n", result);
-  else
-    printf("Error in expression.\n");
+    bool success = false;
+    uint32_t result = expr(expression, &success);
 
+    if (success && result == expected_result)
+    {
+      fprintf(output_file, "Test %d: success, Result = %u\n", i + 1, result);
+    }
+    else
+    {
+      fprintf(output_file, "Test %d: %s 错误值：%u 正确值：%u\n", i + 1, expression, result, expected_result);
+    }
+  }
+
+  fclose(output_file);
   return 0;
 }
