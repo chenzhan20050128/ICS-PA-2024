@@ -25,6 +25,7 @@ typedef struct watchpoint
     uint32_t value;
 
 } WP;
+void init_regex();
 word_t expr(char *e, bool *success);
 void check_watchpoints();
 void print_watchpoints();
