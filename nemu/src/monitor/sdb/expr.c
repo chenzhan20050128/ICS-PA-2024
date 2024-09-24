@@ -418,7 +418,7 @@ uint32_t expr(char *e, bool *success)
         tokens[i - 1].type == TK_LT ||
         tokens[i - 1].type == TK_LE ||
         tokens[i - 1].type == TK_GT ||
-        tokens[i - 1].type == TK_GE ||)
+        tokens[i - 1].type == TK_GE)
     {
       if (tokens[i].type == TK_MULTIPLE)
       {
