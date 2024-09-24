@@ -384,7 +384,7 @@ static uint32_t eval(int p, int q, bool *success)
     case TK_GE:
       return val1 >= val2;
     case TK_DEREF:
-      return vaddr_read(val1, 4); // 32bit riscv should 4B len(cz)
+      return vaddr_read(val2, 4); // 32bit riscv should 4B len(cz)
     case TK_NEGATIVE:
       return (-1) * val2; // it is val2 not val1!
     default:
