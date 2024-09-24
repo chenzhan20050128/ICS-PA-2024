@@ -78,8 +78,8 @@ static struct rule
     {"-", TK_MINUS},                       // 减号
     {"\\*", TK_MULTIPLE},                  // 乘号
     {"/", TK_DIVIDE},                      // 除号
-    {"\\$", TK_LEFT_BRACKET},              // 左括号
-    {"\\$", TK_RIGHT_BRACKET},             // 右括号
+    {"\\(", TK_LEFT_BRACKET},              // 左括号
+    {"\\)", TK_RIGHT_BRACKET},             // 右括号
     {"0x[0-9a-fA-F]+", TK_HEX},            // 十六进制数
     {"\\$[a-zA-Z_][a-zA-Z0-9_]*", TK_REG}, // 寄存器
     {"[0-9]+", TK_NUM},                    // 十进制整数
@@ -389,6 +389,7 @@ uint32_t expr(char *e, bool *success)
 {
   if (!make_token(e))
   {
+    Assert(0, "Error:can't make_token");
     *success = false;
     return 0;
   }
