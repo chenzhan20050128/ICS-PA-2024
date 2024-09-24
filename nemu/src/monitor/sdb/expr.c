@@ -403,22 +403,22 @@ uint32_t expr(char *e, bool *success)
   */
 
   *success = true;
-  /*
+
   for (int i = 0; i < nr_token; i++)
   {
-    if (i == 0 || tokens[i - 1].type == TK_LEFT_BRACKET ||
+    if (i == 0 ||
         tokens[i - 1].type == TK_ADD ||
         tokens[i - 1].type == TK_MINUS ||
         tokens[i - 1].type == TK_MULTIPLE ||
         tokens[i - 1].type == TK_DIVIDE ||
         tokens[i - 1].type == TK_DEREF ||
+        tokens[i - 1].type == TK_NEGATIVE ||
         tokens[i - 1].type == TK_EQ ||
         tokens[i - 1].type == TK_NEQ ||
         tokens[i - 1].type == TK_LT ||
         tokens[i - 1].type == TK_LE ||
         tokens[i - 1].type == TK_GT ||
-        tokens[i - 1].type == TK_GE ||
-        tokens[i - 1].type == TK_RIGHT_BRACKET)
+        tokens[i - 1].type == TK_GE ||)
     {
       if (tokens[i].type == TK_MULTIPLE)
       {
@@ -433,7 +433,6 @@ uint32_t expr(char *e, bool *success)
       }
     }
   }
-  */
 
   return eval(0, nr_token - 1, success);
 }

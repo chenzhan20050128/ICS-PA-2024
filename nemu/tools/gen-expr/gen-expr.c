@@ -18,7 +18,6 @@ static char *code_format =
 
 static int num_parentheses = 0; // 记录括号的数量，保证括号匹配
 
-#define USE_NEGATIVE_NUMBERS
 #define EXPR_MAX_LENGTH 10
 
 static char *gen_rand_subexpr();
@@ -60,20 +59,40 @@ static char *gen_rand_subexpr(int maxLength)
   case 0:
   {
     char num_buf[100];
-    unsigned num = rand() % 10;  // 生成 0 到 9 的随机无符号数
-    sprintf(num_buf, "%u", num); // 确保数字是无符号的
-    strcat(subexpr, num_buf);
+    unsigned num = rand() % 10; // 生成 0 到 9 的随机无符号数
+    sprintf(num_buf, "%u", num);
+    if (rand() % 3 == 0)
+    {
+      strcat(subexpr, "(-");
+      strcat(subexpr, num_buf);
+      strcat(subexpr, ")");
+    }
+    else
+    {
+      strcat(subexpr, num_buf);
+    }
+
     break;
   }
   case 1:
   {
-    strcat(subexpr, "(");
-    num_parentheses++;
-    temp = gen_rand_subexpr(maxLength - 1);
-    strcat(subexpr, temp);
-    free(temp);
-    strcat(subexpr, ")");
-    num_parentheses--;
+    temp = gen_rand_subexpr(maxLength);
+    int len = strlen(temp);
+    if (temp[0] == '(' && temp[len - 1] == ')')
+    {
+      // already has an () so won't add () again 0924 19:50 (cz)
+      strcat(subexpr, temp);
+      free(temp);
+    }
+    else
+    {
+      strcat(subexpr, "(");
+      num_parentheses++;
+      strcat(subexpr, temp);
+      free(temp);
+      strcat(subexpr, ")");
+      num_parentheses--;
+    }
     break;
   }
   default:
