@@ -50,7 +50,7 @@ int main(int argc, char *argv[])
 
 void test_main()
 {
-  FILE *input_file = fopen("home/chenzhan/Desktop/ics2024/nemu/tools/gen-expr/input_expression.txt", "r");
+  FILE *input_file = fopen("../tools/gen-expr/input_expression.txt", "r");
   FILE *output_file = fopen("home/chenzhan/Desktop/ics2024/nemu/tools/gen-expr/output_expression.txt", "w");
 
   if (input_file == NULL)
