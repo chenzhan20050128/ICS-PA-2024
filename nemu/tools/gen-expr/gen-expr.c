@@ -61,7 +61,7 @@ static char *gen_rand_subexpr(int maxLength)
     char num_buf[100];
     unsigned num = rand() % 10; // 生成 0 到 9 的随机无符号数
     sprintf(num_buf, "%u", num);
-    if (rand() % 3 == 0)
+    if (rand() % 6 == 0)
     {
       strcat(subexpr, "(-");
       strcat(subexpr, num_buf);
