@@ -403,7 +403,7 @@ uint32_t expr(char *e, bool *success)
   */
 
   *success = true;
-
+  /*
   for (int i = 0; i < nr_token; i++)
   {
     if (i == 0 || tokens[i - 1].type == TK_LEFT_BRACKET ||
@@ -433,6 +433,7 @@ uint32_t expr(char *e, bool *success)
       }
     }
   }
+  */
 
   return eval(0, nr_token - 1, success);
 }

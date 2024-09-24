@@ -100,7 +100,7 @@ void test_main()
       fprintf(output_file, "Test %d: %s 错误值：%u 正确值：%u\n", i + 1, expression, result, expected_result);
     }
   }
-  printf("Test finished");
+  printf("Test finished\n");
   fclose(input_file);
   fclose(output_file);
   return;
