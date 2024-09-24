@@ -47,7 +47,6 @@ int main(int argc, char *argv[])
 
   return is_exit_status_bad();
 }
-
 void test_main()
 {
   FILE *input_file = fopen("/home/chenzhan/Desktop/ics2024/nemu/tools/gen-expr/input_expression.txt", "r");
@@ -75,6 +74,8 @@ void test_main()
 
   init_regex();
 
+  int correct_count = 0;
+
   for (int i = 0; i < num_tests; i++)
   {
     uint32_t expected_result;
@@ -93,6 +94,7 @@ void test_main()
 
     if (success && result == expected_result)
     {
+      correct_count++;
       fprintf(output_file, "Test %d: success, Result = %u\n", i + 1, result);
     }
     else
@@ -100,6 +102,11 @@ void test_main()
       fprintf(output_file, "Test %d: %s 错误值：%u 正确值：%u\n", i + 1, expression, result, expected_result);
     }
   }
+
+  double accuracy = (double)correct_count / num_tests * 100.0;
+  fprintf(output_file, "Correct Count: %d\n", correct_count);
+  fprintf(output_file, "Accuracy: %.2f%%\n", accuracy);
+
   printf("Test finished\n");
   fclose(input_file);
   fclose(output_file);
