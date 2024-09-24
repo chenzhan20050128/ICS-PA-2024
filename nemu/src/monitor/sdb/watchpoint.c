@@ -116,7 +116,7 @@ void print_watchpoints()
  */
 void check_watchpoints()
 {
-#ifdef CONFIG_WATCHPOINT
+
   WP *wp = head;
   while (wp != NULL)
   {
@@ -131,14 +131,13 @@ void check_watchpoints()
     if (new_val != wp->value)
     {
       /* 监视点触发，更新值并暂停 */
-      printf("Watchpoint wp%d triggered: %s\n", wp->NO, wp->expr);
+      printf("Watchpoint wp%d triggered: %s\n", wp->NO, wp->expression);
       nemu_state.state = NEMU_STOP;
       wp->value = new_val;
       return;
     }
     wp = wp->next;
   }
-#endif
 }
 
 void delete_watchpoint(int NO)
