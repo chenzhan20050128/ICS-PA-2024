@@ -138,6 +138,7 @@ static int cmd_p(char *args)
   {
     Assert(0, "Error:cmd_p");
   }
+  return 0;
 }
 static int cmd_w(char *args)
 {
@@ -150,6 +151,7 @@ static int cmd_w(char *args)
   {
     new_wp(arg);
   }
+  return 0;
 }
 static int cmd_d(char *args)
 {

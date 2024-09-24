@@ -21,13 +21,15 @@
 #include <stdlib.h>
 #include <stdbool.h>
 #include <assert.h>
-// #include "sdb.h"
-//  #include <isa.h>
-//  #include "../../include/memory/vaddr.h"
-#include "/home/chenzhan/Desktop/ics2024/nemu/src/monitor/sdb/sdb.h"
-#include "/home/chenzhan/Desktop/ics2024/nemu/include/isa.h"
-#include "/home/chenzhan/Desktop/ics2024/nemu/include/common.h"
-#include "/home/chenzhan/Desktop/ics2024/nemu/include/memory/vaddr.h"
+#include <sdb.h>
+#include <isa.h>
+#include <memory/vaddr.h>
+#include <common.h>
+// #include "/home/chenzhan/Desktop/ics2024/nemu/src/monitor/sdb/sdb.h"
+// #include "/home/chenzhan/Desktop/ics2024/nemu/include/isa.h"
+// #include "/home/chenzhan/Desktop/ics2024/nemu/include/common.h"
+// #include "/home/chenzhan/Desktop/ics2024/nemu/include/memory/vaddr.h"
+
 typedef unsigned int uint32_t;
 
 enum
@@ -76,8 +78,8 @@ static struct rule
     {"-", TK_MINUS},                       // 减号
     {"\\*", TK_MULTIPLE},                  // 乘号
     {"/", TK_DIVIDE},                      // 除号
-    {"\$", TK_LEFT_BRACKET},               // 左括号
-    {"\$", TK_RIGHT_BRACKET},              // 右括号
+    {"\\$", TK_LEFT_BRACKET},              // 左括号
+    {"\\$", TK_RIGHT_BRACKET},             // 右括号
     {"0x[0-9a-fA-F]+", TK_HEX},            // 十六进制数
     {"\\$[a-zA-Z_][a-zA-Z0-9_]*", TK_REG}, // 寄存器
     {"[0-9]+", TK_NUM},                    // 十进制整数
@@ -435,14 +437,20 @@ uint32_t expr(char *e, bool *success)
 }
 
 /* 测试主函数*/
-int main(int argc, char *argv[])
+int test_main(int argc, char *argv[])
 {
   FILE *output_file = fopen("output_expression.txt", "w");
   assert(output_file != NULL);
 
   printf("Hello!Please write the answer and expression:\n");
   int num_tests = 0;
-  scanf("%d", &num_tests); // 读取测试的数量
+
+  if (scanf("%d", &num_tests) != 1)
+  {
+    fprintf(stderr, "Failed to read number of tests\n");
+    exit(EXIT_FAILURE);
+  }
+
   fprintf(output_file, "num_tests:%d\n", num_tests);
 
   init_regex();
@@ -452,8 +460,11 @@ int main(int argc, char *argv[])
     uint32_t expected_result;
     char expression[65536];
     // 读取期望值和表达式
-    scanf("%u %[^\n]s", &expected_result, expression);
-
+    if (scanf("%u %[^\n]s", &expected_result, expression) != 2)
+    {
+      fprintf(stderr, "Failed to read expected result and expression\n");
+      exit(EXIT_FAILURE);
+    }
     bool success = false;
     uint32_t result = expr(expression, &success);
 
