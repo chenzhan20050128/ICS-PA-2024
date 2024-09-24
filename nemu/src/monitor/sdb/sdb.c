@@ -141,14 +141,13 @@ static int cmd_p(char *args)
 }
 static int cmd_w(char *args)
 {
-  char *arg = strtok(NULL, " ");
-  if (arg == NULL)
+  if (args == NULL)
   {
     Assert(0, "Error:cmd_w needs argument:expression char*");
   }
   else
   {
-    new_wp(arg);
+    new_wp(args);
   }
   return 0;
 }
