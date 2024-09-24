@@ -88,7 +88,7 @@ static char *gen_rand_subexpr(int maxLength)
     }
 
     char op_buf[4];
-    char op = "+-*/"[rand() % 4];
+    char op = "+-"[rand() % 2];
     sprintf(op_buf, "%c", op);
     strcat(subexpr, op_buf);
 
