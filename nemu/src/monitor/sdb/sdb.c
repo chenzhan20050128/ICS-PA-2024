@@ -127,9 +127,8 @@ static int cmd_x(char *args)
 // 删除监视点	d N	d 2	删除序号为N的监视点
 static int cmd_p(char *args)
 {
-  char *arg = strtok(NULL, " ");
   bool success;
-  word_t result = expr(arg, &success);
+  word_t result = expr(args, &success);
   if (success)
   {
     printf("%u\n", result);
