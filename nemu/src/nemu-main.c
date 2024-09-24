@@ -88,7 +88,7 @@ void test_main()
       exit(EXIT_FAILURE);
     }
 
-    bool success = false;
+    bool success = true;
     uint32_t result = expr(expression, &success);
 
     if (success && result == expected_result)

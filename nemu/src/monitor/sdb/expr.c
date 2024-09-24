@@ -289,7 +289,6 @@ static uint32_t eval(int p, int q, bool *success)
 {
   if (p > q)
   {
-    /* 错误的表达式 */
     *success = false;
     return 0;
   }
@@ -315,7 +314,10 @@ static uint32_t eval(int p, int q, bool *success)
       }
       return reg_val;
     }
-    *success = false;
+    else
+    {
+      *success = false;
+    }
     return 0;
   }
   else if (check_parentheses(p, q))
@@ -333,17 +335,25 @@ static uint32_t eval(int p, int q, bool *success)
       *success = false;
       return 0;
     }
-    uint32_t val1 = eval(p, op - 1, success);
-    if (!(*success))
+    uint32_t val1 = 0;
+    if (p <= op - 1)
     {
-      printf("Error:Val1 don't success\n");
-      return 0;
+      val1 = eval(p, op - 1, success);
+      if (!(*success))
+      {
+        printf("Error:Val1 don't success\n");
+        return 0;
+      }
     }
-    uint32_t val2 = eval(op + 1, q, success);
-    if (!(*success))
+    uint32_t val2 = 0;
+    if (op + 1 <= q)
     {
-      printf("Error:Val2 don't success\n");
-      return 0;
+      val2 = eval(op + 1, q, success);
+      if (!(*success))
+      {
+        printf("Error:Val2 don't success\n");
+        return 0;
+      }
     }
     switch (tokens[op].type)
     {
@@ -358,7 +368,7 @@ static uint32_t eval(int p, int q, bool *success)
       {
         printf("Error: Division by zero\n");
         *success = false;
-        return 0;
+        return -1;
       }
       return val1 / val2;
     case TK_EQ:
