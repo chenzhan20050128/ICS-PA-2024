@@ -376,7 +376,7 @@ static uint32_t eval(int p, int q, bool *success)
     case TK_DEREF:
       return vaddr_read(val1, 4); // 32bit riscv should 4B len(cz)
     case TK_NEGATIVE:
-      return (-1) * val1;
+      return (-1) * val2; // it is val2 not val1!
     default:
       printf("Error: Unknown operator type %d\n", tokens[op].type);
       *success = false;
@@ -418,7 +418,8 @@ uint32_t expr(char *e, bool *success)
         tokens[i - 1].type == TK_LT ||
         tokens[i - 1].type == TK_LE ||
         tokens[i - 1].type == TK_GT ||
-        tokens[i - 1].type == TK_GE)
+        tokens[i - 1].type == TK_GE ||
+        tokens[i - 1].type == TK_LEFT_BRACKET)
     {
       if (tokens[i].type == TK_MULTIPLE)
       {
