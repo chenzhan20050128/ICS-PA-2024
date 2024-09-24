@@ -15,14 +15,19 @@
 
 // #define Log(fmt, ...) printf(fmt "\n", ##__VA_ARGS__)
 #include <regex.h>
+// #include "common.h" //0924 17:25 cz
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
 #include <stdbool.h>
 #include <assert.h>
-// #include <isa.h>
-// #include "../../include/memory/vaddr.h"
-
+// #include "sdb.h"
+//  #include <isa.h>
+//  #include "../../include/memory/vaddr.h"
+#include "/home/chenzhan/Desktop/ics2024/nemu/src/monitor/sdb/sdb.h"
+#include "/home/chenzhan/Desktop/ics2024/nemu/include/isa.h"
+#include "/home/chenzhan/Desktop/ics2024/nemu/include/common.h"
+#include "/home/chenzhan/Desktop/ics2024/nemu/include/memory/vaddr.h"
 typedef unsigned int uint32_t;
 
 enum

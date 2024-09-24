@@ -68,7 +68,7 @@ static int cmd_si(char *args)
   int num = atoi(arg);
   if (num == 0 && strcmp(arg, "0") != 0)
   {
-    printf("Error:invalid num\n");
+    Assert(0, "Error:invalid num:\n");
   }
   else
   {
@@ -85,7 +85,7 @@ static int cmd_info(char *args)
   }
   else if (strcmp(arg, "w") == 0)
   {
-    // print the watchpoint 09221740 todo
+    print_watchpoints();
   }
 
   return 0;
@@ -127,14 +127,46 @@ static int cmd_x(char *args)
 // 删除监视点	d N	d 2	删除序号为N的监视点
 static int cmd_p(char *args)
 {
-  return 0;
+  char *arg = strtok(NULL, " ");
+  bool success;
+  word_t result = expr(arg, &success);
+  if (success)
+  {
+    printf("%u\n", result);
+  }
+  else
+  {
+    Assert(0, "Error:cmd_p");
+  }
 }
 static int cmd_w(char *args)
 {
-  return 0;
+  char *arg = strtok(NULL, " ");
+  if (arg == NULL)
+  {
+    Assert(0, "Error:cmd_w needs argument:expression char*");
+  }
+  else
+  {
+    new_wp(arg);
+  }
 }
 static int cmd_d(char *args)
 {
+  char *arg = strtok(NULL, " ");
+  if (arg == NULL)
+  {
+    Assert(0, "Error:cmd_d needs argument:N int");
+  }
+  int num = atoi(arg);
+  if (num == 0 && strcmp(arg, "0") != 0)
+  {
+    Assert(0, "Error:invalid num:N\n");
+  }
+  else
+  {
+    delete_watchpoint(num);
+  }
   return 0;
 }
 
