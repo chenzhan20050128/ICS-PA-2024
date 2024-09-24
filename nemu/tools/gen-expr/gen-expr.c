@@ -151,7 +151,7 @@ static int try_eval_expr()
   fp = popen("/tmp/.expr", "r");
   assert(fp != NULL);
 
-  unsigned result;
+  int result;
   ret = fscanf(fp, "%u", &result);
   pclose(fp);
 
