@@ -103,10 +103,10 @@ void free_wp(WP *wp)
 void print_watchpoints()
 {
   WP *wp = head;
-  printf("Num\tWatchpoint\tExpression\tValue\n");
+  printf("Watchpoint\tExpression\tValue\n");
   while (wp != NULL)
   {
-    printf("%d\twp%d\t\t%s\t\t%u\n", wp->NO, wp->NO, wp->expression, wp->value);
+    printf("wp%d\t\t%s\t\t%u\n", wp->NO, wp->expression, wp->value);
     wp = wp->next;
   }
 }
@@ -131,7 +131,7 @@ void check_watchpoints()
     if (new_val != wp->value)
     {
       /* 监视点触发，更新值并暂停 */
-      printf("Watchpoint wp%d triggered: %s\n", wp->NO, wp->expression);
+      printf("Watchpoint wp%d triggered: %s\nOld value: %u\nNew value: %u\n", wp->NO, wp->expression, wp->value, new_val);
       nemu_state.state = NEMU_STOP;
       wp->value = new_val;
       return;

@@ -215,3 +215,13 @@ config RT_CHECK
   default y
 
 endmenu
+
+config WATCHPOINT
+  bool "Enable watchpoint functionality"
+  default y
+  help
+    Enable this option to activate watchpoint functionality in NEMU.
+    Watchpoints allow you to monitor specific memory addresses and
+    detect when they are read or written to. This can be useful for
+    debugging, but it might impact performance. Disable this option
+    if you do not need watchpoint functionality to improve performance.
