@@ -106,7 +106,7 @@ void print_watchpoints()
   printf("Watchpoint\tExpression\tValue\tHex Value\n");
   while (wp != NULL)
   {
-    printf("wp%d\t\t%s\t\t%u\t\t0x%x\n", wp->NO, wp->expression, wp->value, wp->value);
+    printf("wp%d\t\t%s\t%u\t0x%x\n", wp->NO, wp->expression, wp->value, wp->value);
     wp = wp->next;
   }
 }

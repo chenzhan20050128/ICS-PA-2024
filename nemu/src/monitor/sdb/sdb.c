@@ -131,11 +131,12 @@ static int cmd_p(char *args)
   word_t result = expr(args, &success);
   if (success)
   {
-    printf("%u\n", result);
+    printf("Dec Value\tHex Value\n");
+    printf("%u\t0x%x\n", result, result);
   }
   else
   {
-    Assert(0, "Error:cmd_p");
+    Assert(0, "Error:cmd_p not success\n");
   }
   return 0;
 }
@@ -143,7 +144,7 @@ static int cmd_w(char *args)
 {
   if (args == NULL)
   {
-    Assert(0, "Error:cmd_w needs argument:expression char*");
+    Assert(0, "Error:cmd_w needs argument:expression char*\n");
   }
   else
   {
@@ -156,12 +157,12 @@ static int cmd_d(char *args)
   char *arg = strtok(NULL, " ");
   if (arg == NULL)
   {
-    Assert(0, "Error:cmd_d needs argument:N int");
+    Assert(0, "Error:cmd_d needs argument:N int\n");
   }
   int num = atoi(arg);
   if (num == 0 && strcmp(arg, "0") != 0)
   {
-    Assert(0, "Error:invalid num:N\n");
+    Assert(0, "Error:cmd_d invalid num:N\n");
   }
   else
   {
