@@ -47,14 +47,25 @@ enum
   TK_REG, // 寄存器
 
   /* TODO: Add more token types */
-  TK_ADD,           // 加号
-  TK_MINUS,         // 减号
-  TK_MULTIPLE,      // 乘号
-  TK_DIVIDE,        // 除号
+  TK_ADD,      // 加号
+  TK_MINUS,    // 减号
+  TK_MULTIPLE, // 乘号
+  TK_DIVIDE,   // 除号
+  TK_MOD,
   TK_LEFT_BRACKET,  // 左括号
   TK_RIGHT_BRACKET, // 右括号
   TK_DEREF,         // 指针解引用
-  TK_NEGATIVE
+  TK_NEGATIVE,
+
+  TK_BIT_NOT,     // 按位取反
+  TK_BIT_AND,     // 按位与
+  TK_BIT_OR,      // 按位或
+  TK_BIT_XOR,     // 按位异或
+  TK_LOG_AND,     // 逻辑与
+  TK_LOG_OR,      // 逻辑或
+  TK_LOG_NOT,     // 逻辑非
+  TK_LEFT_SHIFT,  // 左移
+  TK_RIGHT_SHIFT, // 右移
 
 };
 
@@ -83,7 +94,17 @@ static struct rule
     {"0x[0-9a-fA-F]+", TK_HEX},            // 十六进制数
     {"\\$[a-zA-Z_][a-zA-Z0-9_]*", TK_REG}, // 寄存器
     {"[0-9]+", TK_NUM},                    // 十进制整数
-}; // notice ! there are no TK_DEREF! because it is same as TK_MULTIPLE literally!there are also no TK_NEGATIVE
+
+    {"~", TK_BIT_NOT},      // 按位取反
+    {"&", TK_BIT_AND},      // 按位与
+    {"\\|", TK_BIT_OR},     // 按位或
+    {"\\^", TK_BIT_XOR},    // 按位异或
+    {"&&", TK_LOG_AND},     // 逻辑与
+    {"\\|\\|", TK_LOG_OR},  // 逻辑或
+    {"!", TK_LOG_NOT},      // 逻辑非
+    {"<<", TK_LEFT_SHIFT},  // 左移
+    {">>", TK_RIGHT_SHIFT}, // 右移
+    {"%", TK_MOD}};         // notice ! there are no TK_DEREF! because it is same as TK_MULTIPLE literally!there are also no TK_NEGATIVE
 
 #define NR_REGEX (sizeof(rules) / sizeof(rules[0]))
 #define TOKENS_NUM 10010 // cz 0923 14:27
@@ -169,6 +190,7 @@ static bool make_token(char *e)
         case TK_ADD:
         case TK_MINUS:
         case TK_MULTIPLE:
+        case TK_MOD:
         case TK_DIVIDE:
         case TK_LEFT_BRACKET:
         case TK_RIGHT_BRACKET:
@@ -178,6 +200,15 @@ static bool make_token(char *e)
         case TK_GT:
         case TK_LE:
         case TK_LT:
+        case TK_BIT_NOT:     // 按位取反
+        case TK_BIT_AND:     // 按位与
+        case TK_BIT_OR:      // 按位或
+        case TK_BIT_XOR:     // 按位异或
+        case TK_LOG_AND:     // 逻辑与
+        case TK_LOG_OR:      // 逻辑或
+        case TK_LOG_NOT:     // 逻辑非
+        case TK_LEFT_SHIFT:  // 左移
+        case TK_RIGHT_SHIFT: // 右移
           if (nr_token >= TOKENS_NUM)
           {
             printf("Error: too many tokens\n");
@@ -238,26 +269,92 @@ static bool check_parentheses(int p, int q)
 
 static int find_main_operator(int p, int q)
 {
-  int min_precedence = 1000;
+  int low_precedence = -1000;
+  /*
+   *Notice:the lowest precedence has numerically highest num!
+   *example:+ is 4 and * is 3;the main_operator is + than * so it will find its numerically biggest precedence number!
+   * 0925 13:53 (cz)
+   */
   int main_op = -1;
   int stack = 0;
 
   /* 定义运算符的优先级
-   * 优先级从低到高: == (0) < +,- (1) < *,/ (2)
+   *
    */
   int precedence[] = {
-      [TK_EQ] = 0,
-      [TK_NEQ] = 0,
-      [TK_LE] = 0,
-      [TK_LT] = 0,
-      [TK_GE] = 0,
-      [TK_GT] = 0,
-      [TK_ADD] = 1,
-      [TK_MINUS] = 1,
-      [TK_MULTIPLE] = 2,
-      [TK_DIVIDE] = 2,
-      [TK_DEREF] = 3,
-      [TK_NEGATIVE] = 4};
+      // 后缀自增和自减，函数调用，数组下标，成员访问（通过指针，对象）
+      // [TK_POST_INC] = 1,   // 后缀自增
+      // [TK_POST_DEC] = 1,   // 后缀自减
+      // [TK_FUNC_CALL] = 1,  // 函数调用
+      // [TK_ARRAY_SUBS] = 1, // 数组下标
+      // [TK_MEMBER_PTR] = 1, // 成员访问（通过指针）
+      // [TK_MEMBER_OBJ] = 1, // 成员访问（通过对象）
+
+      // 前缀自增和自减，正负号，逻辑非，按位取反，类型转换，取值运算符，
+      // 地址运算符，大小of，内存对齐
+      // [TK_PRE_INC] = 2,   // 前缀自增
+      // [TK_PRE_DEC] = 2,   // 前缀自减
+      // [TK_POSITIVE] = 2,  // 正号 (一元加)
+      [TK_NEGATIVE] = 2, // 负号 (一元减)
+      [TK_LOG_NOT] = 2,  // 逻辑非
+      [TK_BIT_NOT] = 2,  // 按位取反
+      // [TK_TYPE_CAST] = 2, // 类型转换
+      [TK_DEREF] = 2, // 指针解引用
+      // [TK_ADDRESS] = 2,   // 取地址
+      // [TK_SIZEOF] = 2,    // 数据类型大小
+      // [TK_ALIGNOF] = 2,   // 内存对齐
+
+      // 乘法，除法，取模
+      [TK_MULTIPLE] = 3, // 乘号
+      [TK_DIVIDE] = 3,   // 除号
+      [TK_MOD] = 3,      // 取模
+
+      // 加法，减法
+      [TK_ADD] = 4,   // 加号
+      [TK_MINUS] = 4, // 减号
+
+      // 位移运算
+      [TK_LEFT_SHIFT] = 5,  // 左移
+      [TK_RIGHT_SHIFT] = 5, // 右移
+
+      // 比较运算
+      [TK_LE] = 6, // 小于等于
+      [TK_LT] = 6, // 小于
+      [TK_GE] = 6, // 大于等于
+      [TK_GT] = 6, // 大于
+
+      // 等于和不等于
+      [TK_EQ] = 7,  // 等于
+      [TK_NEQ] = 7, // 不等于
+
+      // 按位运算
+      [TK_BIT_AND] = 8, // 按位与
+      [TK_BIT_XOR] = 9, // 按位异或
+      [TK_BIT_OR] = 10, // 按位或
+
+      // 逻辑运算
+      [TK_LOG_AND] = 11, // 逻辑与
+      [TK_LOG_OR] = 12,  // 逻辑或
+
+      // 三元条件运算
+      //[TK_TERNARY_COND] = 13, // 三元条件运算符
+
+      // 赋值运算符和复合赋值运算符
+      // [TK_ASSIGN] = 14,       // 赋值
+      // [TK_ADD_ASSIGN] = 14,   // 加等于
+      // [TK_SUB_ASSIGN] = 14,   // 减等于
+      // [TK_MUL_ASSIGN] = 14,   // 乘等于
+      // [TK_DIV_ASSIGN] = 14,   // 除等于
+      // [TK_MOD_ASSIGN] = 14,   // 模等于
+      // [TK_LEFT_ASSIGN] = 14,  // 左移等于
+      // [TK_RIGHT_ASSIGN] = 14, // 右移等于
+      // [TK_AND_ASSIGN] = 14,   // 按位与等于
+      // [TK_XOR_ASSIGN] = 14,   // 按位异或等于
+      // [TK_OR_ASSIGN] = 14,    // 按位或等于
+
+      // 逗号运算符
+      //[TK_COMMA] = 15 // 逗号
+  };
 
   for (int i = p; i <= q; i++)
   {
@@ -274,9 +371,9 @@ static int find_main_operator(int p, int q)
     if (stack == 0 && tokens[i].type != TK_NUM && tokens[i].type != TK_HEX && tokens[i].type != TK_REG)
     {
       int current_precedence = precedence[tokens[i].type];
-      if (current_precedence <= min_precedence)
+      if (current_precedence >= low_precedence)
       {
-        min_precedence = current_precedence;
+        low_precedence = current_precedence;
         main_op = i;
       }
     }
@@ -366,7 +463,7 @@ static uint32_t eval(int p, int q, bool *success)
     case TK_DIVIDE:
       if (val2 == 0)
       {
-        printf("Error: Division by zero\n");
+        printf("Error: Division by zero.val1 = %u,val2 = %u\n", val1, val2);
         *success = false;
         return -1;
       }
@@ -387,6 +484,34 @@ static uint32_t eval(int p, int q, bool *success)
       return vaddr_read(val2, 4); // 32bit riscv should 4B len(cz)
     case TK_NEGATIVE:
       return (-1) * val2; // it is val2 not val1!
+    case TK_BIT_NOT:
+      return ~val2; // 按位取反, 仅对单一操作数 val2
+    case TK_BIT_AND:
+      return val1 & val2; // 按位与
+
+    case TK_BIT_OR:
+      return val1 | val2; // 按位或
+
+    case TK_BIT_XOR:
+      return val1 ^ val2; // 按位异或
+
+    case TK_LOG_AND:
+      return val1 && val2; // 逻辑与
+
+    case TK_LOG_OR:
+      return val1 || val2; // 逻辑或
+
+    case TK_LOG_NOT:
+      return !val2; // 逻辑非, 仅对单一操作数 val2 起作用
+
+    case TK_LEFT_SHIFT:
+      return val1 << val2; // 左移, 对 val1 移动 val2 位数
+
+    case TK_RIGHT_SHIFT:
+      return val1 >> val2; // 右移, 对 val1 移动 val2 位数
+
+    case TK_MOD:
+      return val1 % val2; // 取模
     default:
       printf("Error: Unknown operator type %d\n", tokens[op].type);
       *success = false;
@@ -429,6 +554,16 @@ uint32_t expr(char *e, bool *success)
         tokens[i - 1].type == TK_LE ||
         tokens[i - 1].type == TK_GT ||
         tokens[i - 1].type == TK_GE ||
+        tokens[i - 1].type == TK_BIT_NOT ||     // 按位取反
+        tokens[i - 1].type == TK_BIT_AND ||     // 按位与
+        tokens[i - 1].type == TK_BIT_OR ||      // 按位或
+        tokens[i - 1].type == TK_BIT_XOR ||     // 按位异或
+        tokens[i - 1].type == TK_LOG_AND ||     // 逻辑与
+        tokens[i - 1].type == TK_LOG_OR ||      // 逻辑或
+        tokens[i - 1].type == TK_LOG_NOT ||     // 逻辑非
+        tokens[i - 1].type == TK_LEFT_SHIFT ||  // 左移
+        tokens[i - 1].type == TK_RIGHT_SHIFT || // 右移
+        tokens[i - 1].type == TK_MOD ||         // 取模
         tokens[i - 1].type == TK_LEFT_BRACKET)
     {
       if (tokens[i].type == TK_MULTIPLE)
