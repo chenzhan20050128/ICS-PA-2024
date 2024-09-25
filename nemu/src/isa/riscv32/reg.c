@@ -26,11 +26,12 @@ const char *regs[] = {
 
 void isa_reg_display()
 {
+  printf("%-4s\t%-10s\t%10s\n", "Reg", "Hex Value", "Dec Value"); // 表头
   for (int i = 0; i < sizeof(regs) / sizeof(regs[0]); i++)
   {
-    printf("%-4s0x%08x %10u\n", regs[i], cpu.gpr[i], cpu.gpr[i]);
+    printf("%-4s\t0x%08x\t%10u\n", regs[i], cpu.gpr[i], cpu.gpr[i]);
   }
-  printf("pc  0x%08x %10u\n", cpu.pc, cpu.pc);
+  printf("pc\t0x%08x\t%10u\n", cpu.pc, cpu.pc);
 }
 
 word_t isa_reg_str2val(const char *s, bool *success)

@@ -131,7 +131,10 @@ void check_watchpoints()
     if (new_val != wp->value)
     {
       /* 监视点触发，更新值并暂停 */
-      printf("Watchpoint wp%d triggered: %s\nOld value: %u\nNew value: %u\n", wp->NO, wp->expression, wp->value, new_val);
+      printf("Watchpoint wp%d triggered: %s\n"
+             "Old value: %u\t(0x%x)\n" // also print the hex number
+             "New value: %u\t(0x%x)\n",
+             wp->NO, wp->expression, wp->value, wp->value, new_val, new_val);
       nemu_state.state = NEMU_STOP;
       wp->value = new_val;
       return;
