@@ -103,10 +103,10 @@ void free_wp(WP *wp)
 void print_watchpoints()
 {
   WP *wp = head;
-  printf("Watchpoint\tExpression\tValue\n");
+  printf("Watchpoint\tExpression\tValue\tHex Value\n");
   while (wp != NULL)
   {
-    printf("wp%d\t\t%s\t\t%u\n", wp->NO, wp->expression, wp->value);
+    printf("wp%d\t\t%s\t\t%u\t\t0x%x\n", wp->NO, wp->expression, wp->value, wp->value);
     wp = wp->next;
   }
 }
