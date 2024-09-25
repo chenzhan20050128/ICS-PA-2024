@@ -80,6 +80,8 @@ static struct rule
      */
     {" +", TK_NOTYPE},                     // 空格串
     {"==", TK_EQ},                         // 双等号
+    {"<<", TK_LEFT_SHIFT},                 // 左移
+    {">>", TK_RIGHT_SHIFT},                // 右移
     {"<=", TK_LE},                         // 小于等于
     {"<", TK_LT},                          // 小于
     {">=", TK_GE},                         // 大于等于
@@ -95,16 +97,16 @@ static struct rule
     {"\\$[a-zA-Z_][a-zA-Z0-9_]*", TK_REG}, // 寄存器
     {"[0-9]+", TK_NUM},                    // 十进制整数
 
-    {"~", TK_BIT_NOT},      // 按位取反
-    {"&", TK_BIT_AND},      // 按位与
-    {"\\|", TK_BIT_OR},     // 按位或
-    {"\\^", TK_BIT_XOR},    // 按位异或
-    {"&&", TK_LOG_AND},     // 逻辑与
-    {"\\|\\|", TK_LOG_OR},  // 逻辑或
-    {"!", TK_LOG_NOT},      // 逻辑非
-    {"<<", TK_LEFT_SHIFT},  // 左移
-    {">>", TK_RIGHT_SHIFT}, // 右移
-    {"%", TK_MOD}};         // notice ! there are no TK_DEREF! because it is same as TK_MULTIPLE literally!there are also no TK_NEGATIVE
+    {"&&", TK_LOG_AND},    // 逻辑与
+    {"\\|\\|", TK_LOG_OR}, // 逻辑或
+    {"~", TK_BIT_NOT},     // 按位取反
+    {"&", TK_BIT_AND},     // 按位与
+    {"\\|", TK_BIT_OR},    // 按位或
+    {"\\^", TK_BIT_XOR},   // 按位异或
+
+    {"!", TK_LOG_NOT}, // 逻辑非
+    {"%", TK_MOD}};
+// Notice! there are no TK_DEREF! because it is same as TK_MULTIPLE literally!there are also no TK_NEGATIVE
 
 #define NR_REGEX (sizeof(rules) / sizeof(rules[0]))
 #define TOKENS_NUM 10010 // cz 0923 14:27
