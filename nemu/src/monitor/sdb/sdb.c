@@ -19,6 +19,7 @@
 #include <readline/history.h>
 #include <sdb.h>
 #include <memory/vaddr.h>
+#include <utils.h>
 
 static int is_batch_mode = false;
 
@@ -54,6 +55,7 @@ static int cmd_c(char *args)
 
 static int cmd_q(char *args)
 {
+  nemu_state.state = NEMU_END;
   return -1;
 }
 
@@ -268,11 +270,7 @@ void sdb_mainloop()
     {
       if (strcmp(cmd, cmd_table[i].name) == 0)
       {
-        if (strcmp(cmd, "q") == 0)
-        {
-          return;
-        }
-        else if (cmd_table[i].handler(args) < 0)
+        if (cmd_table[i].handler(args) < 0)
         {
           return;
         }
