@@ -15,7 +15,6 @@
 
 #ifndef __SDB_H__
 #define __SDB_H__
-#include "/home/chenzhan/Desktop/ics2024/nemu/include/common.h"
 #include <common.h>
 typedef struct watchpoint
 {

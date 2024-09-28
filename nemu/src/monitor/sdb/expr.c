@@ -25,10 +25,6 @@
 #include <isa.h>
 #include <memory/vaddr.h>
 #include <common.h>
-// #include "/home/chenzhan/Desktop/ics2024/nemu/src/monitor/sdb/sdb.h"
-// #include "/home/chenzhan/Desktop/ics2024/nemu/include/isa.h"
-// #include "/home/chenzhan/Desktop/ics2024/nemu/include/common.h"
-// #include "/home/chenzhan/Desktop/ics2024/nemu/include/memory/vaddr.h"
 
 typedef unsigned int uint32_t;
 

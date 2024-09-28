@@ -13,7 +13,7 @@
  * See the Mulan PSL v2 for more details.
  ***************************************************************************************/
 
-#include "sdb.h"
+#include <sdb.h>
 #include <stdlib.h>
 #include <string.h>
 #include <assert.h>
