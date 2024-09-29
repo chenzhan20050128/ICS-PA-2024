@@ -212,7 +212,7 @@ endchoice
 
 config RT_CHECK
   bool "Enable runtime checking"
-  default n
+  default y
 
 endmenu
 
