@@ -9,6 +9,20 @@
 
 #define XLEN 32 // 0929 12:36 cz
 
+// Helper function to compute high 32 bits of signed multiplication
+static inline int32_t mulh_helper(int32_t a, int32_t b)
+{
+  int64_t result = (int64_t)a * (int64_t)b;
+  return (int32_t)(result >> 32);
+}
+
+// Helper function to compute high 32 bits of signed * unsigned multiplication
+static inline int32_t mulhsu_helper(int32_t a, uint32_t b)
+{
+  int64_t result = (int64_t)a * (int64_t)b;
+  return (int32_t)(result >> 32);
+}
+
 enum
 {
   TYPE_I,
@@ -171,10 +185,8 @@ static int decode_exec(Decode *s)
   // RV32M Multiply/Divide Extension Instructions
   // 0930 13:33 through tests,i find mulh and mulhsu do something wrong,but else 6 inst are correct .so i fix the code.in 13:34.
   INSTPAT("0000001 ????? ????? 000 ????? 0110011", mul, R, R(rd) = BITS(((int64_t)src1 * (int64_t)src2), 31, 0));
-  // mulh：32位整数乘法，取高32位（有符号 * 有符号）
-  INSTPAT("0000001 ????? ????? 001 ????? 0110011", mulh, R, R(rd) = (int32_t)BITS(((int64_t)src1 * (int64_t)src2), 63, 32));
-  // mulhsu：32位整数乘法，取高32位（有符号 * 无符号）
-  INSTPAT("0000001 ????? ????? 010 ????? 0110011", mulhsu, R, R(rd) = (int32_t)BITS(((int64_t)src1 * (uint64_t)src2), 63, 32));
+  INSTPAT("0000001 ????? ????? 001 ????? 0110011", mulh, R, R(rd) = mulh_helper(src1, src2));
+  INSTPAT("0000001 ????? ????? 010 ????? 0110011", mulhsu, R, R(rd) = mulhsu_helper(src1, src2));
 
   INSTPAT("0000001 ????? ????? 011 ????? 0110011", mulhu, R, R(rd) = BITS(((uint64_t)src1 * (uint64_t)src2), 63, 32));
   INSTPAT("0000001 ????? ????? 100 ????? 0110011", div, R, R(rd) = (src2 != 0) ? ((int32_t)src1 / (int32_t)src2) : -1);
