@@ -105,7 +105,7 @@ int vsnprintf(char *out, size_t n, const char *fmt, va_list ap)
   const char *f = fmt;
   size_t count = 0;
 
-  while (*f && count < n - 1)
+  while (*f && (count < n - 1))
   {
     if (*f == '%')
     {
@@ -113,7 +113,7 @@ int vsnprintf(char *out, size_t n, const char *fmt, va_list ap)
       if (*f == 's')
       {
         const char *str = va_arg(ap, const char *);
-        while (*str && count < n - 1)
+        while (*str && (count < n - 1))
         {
           *p++ = *str++;
           count++;
@@ -124,10 +124,11 @@ int vsnprintf(char *out, size_t n, const char *fmt, va_list ap)
         int num = va_arg(ap, int);
         char num_str[32];
         itoa(num, num_str);
-        char *n = num_str;
-        while (*n && count < n - 1)
+        char *n_temp = num_str;
+        // fix char *n to char *n_temp 14:57
+        while (*n_temp && (count < n - 1))
         {
-          *p++ = *n++;
+          *p++ = *n_temp++;
           count++;
         }
       }
