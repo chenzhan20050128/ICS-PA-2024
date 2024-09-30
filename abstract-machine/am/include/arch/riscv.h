@@ -6,12 +6,17 @@
 #else
 #define NR_REGS 32
 #endif
-
+//change in 0930 14:02
+//corresponding to /home/chenzhan/Desktop/ics2024/abstract-machine/am/src/riscv/nemu/trap.S
 struct Context {
-  // TODO: fix the order of these members to match trap.S
-  uintptr_t mepc, mcause, gpr[NR_REGS], mstatus;
-  void *pdir;
+  // Order these to match the offsets used in trap.S
+  uintptr_t gpr[NR_REGS]; // General purpose registers
+  uintptr_t mcause;       // Offset corresponds to OFFSET_CAUSE
+  uintptr_t mstatus;      // Offset corresponds to OFFSET_STATUS
+  uintptr_t mepc;         // Offset corresponds to OFFSET_EPC
+  void *pdir;             // Page directory (if used)
 };
+
 
 #ifdef __riscv_e
 #define GPR1 gpr[15] // a5
