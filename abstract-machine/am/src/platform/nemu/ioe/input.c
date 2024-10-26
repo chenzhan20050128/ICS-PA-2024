@@ -2,15 +2,20 @@
 #include <nemu.h>
 
 #define KEYDOWN_MASK 0x8000
+#define KEYCODE_MASK 0x7FFF
 
 void __am_input_keybrd(AM_INPUT_KEYBRD_T *kbd)
 {
-  // 读取键盘数据寄存器中的键码
   int keycode = inl(KBD_ADDR);
 
-  // 判断是否为按下事件
-  kbd->keydown = (keycode & KEYDOWN_MASK) != 0;
-
-  // 获取实际键码（去掉按下掩码）
-  kbd->keycode = keycode & ~KEYDOWN_MASK;
+  if (keycode == AM_KEY_NONE)
+  {
+    kbd->keydown = false;
+    kbd->keycode = AM_KEY_NONE;
+  }
+  else
+  {
+    kbd->keydown = (bool)((keycode & KEYDOWN_MASK) != 0);
+    kbd->keycode = keycode & KEYCODE_MASK; // 提取有效的键码
+  }
 }
