@@ -21,7 +21,7 @@ void *malloc(size_t size)
 #if !(defined(__ISA_NATIVE__) && defined(__NATIVE_USE_KLIB__))
   if (addr == 0)
   {
-    // panic("Heap not initialized");
+    panic("Heap not initialized");
   }
 
   // 将请求的内存大小对齐到 8 字节（或其他对齐要求）
