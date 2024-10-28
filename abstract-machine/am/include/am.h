@@ -88,3 +88,5 @@ extern "C"
 #endif
 
 #endif
+
+void init_heap(); // add by cz
