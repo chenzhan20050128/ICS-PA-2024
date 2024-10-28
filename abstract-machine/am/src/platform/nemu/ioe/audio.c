@@ -22,7 +22,7 @@ void __am_audio_init()
 // 配置音频函数，设置音频设备的初始配置
 void __am_audio_config(AM_AUDIO_CONFIG_T *cfg)
 {
-  cfg->present = true;           // change by cz at 1028 19:43
+  cfg->present = true;  // change by cz at 1028 19:43
   cfg->bufsize = 65536; // 设置缓冲区大小为64KB
 }
 
