@@ -12,7 +12,7 @@
  *
  * See the Mulan PSL v2 for more details.
  ***************************************************************************************/
-//hardware:
+// hardware:
 #include <common.h>     // 包含公共头文件，定义了一些全局使用的基本功能和类型
 #include <device/map.h> // 包含设备映射相关的头文件
 #include <SDL2/SDL.h>   // 包含SDL库，用于音频处理

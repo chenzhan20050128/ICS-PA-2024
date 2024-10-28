@@ -48,7 +48,7 @@ void __am_audio_play(AM_AUDIO_PLAY_T *ctl)
   uint32_t cnt = inl(AUDIO_COUNT_ADDR);                                 // 获取当前音频的计数
   uint32_t len = ((ctl->buf).end - (ctl->buf).start) / sizeof(uint8_t); // 计算音频数据长度
 
-  printf("area end %x and begin %x\n", (ctl->buf).end, (ctl->buf).start); // 调试信息，输出区域的开始和结束地址
+  // printf("area end %x and begin %x\n", (ctl->buf).end, (ctl->buf).start); // 调试信息，输出区域的开始和结束地址
 
   while (len > buf_size - cnt) // 当缓冲区剩余空间小于数据长度时等待
   {
