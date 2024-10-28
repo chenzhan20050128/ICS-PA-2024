@@ -18,7 +18,7 @@
 #include <SDL2/SDL.h>   // 包含SDL库，用于音频处理
 #include <stdbool.h>
 #include <stdint.h>
-
+#define CONFIG_SB_SIZE_CZ 0x10000000 // add by cz to test, 1028 21:25
 // 宏定义，用于获取两个数的最小值
 #define min(x, y) ((x < y) ? x : y)
 
@@ -108,7 +108,7 @@ void init_audio()
   add_mmio_map("audio", CONFIG_AUDIO_CTL_MMIO, audio_base, space_size, audio_io_handler); // 添加内存映射IO
 #endif
 
-  sbuf = (uint8_t *)new_space(CONFIG_SB_SIZE);                            // 分配音频缓冲区空间
-  add_mmio_map("audio-sbuf", CONFIG_SB_ADDR, sbuf, CONFIG_SB_SIZE, NULL); // 添加音频缓冲区内存映射
-  audio_base[reg_sbuf_size] = CONFIG_SB_SIZE;                             // 设置缓冲区大小寄存器
+  sbuf = (uint8_t *)new_space(CONFIG_SB_SIZE_CZ);                            // 分配音频缓冲区空间
+  add_mmio_map("audio-sbuf", CONFIG_SB_ADDR, sbuf, CONFIG_SB_SIZE_CZ, NULL); // 添加音频缓冲区内存映射
+  audio_base[reg_sbuf_size] = CONFIG_SB_SIZE_CZ;                             // 设置缓冲区大小寄存器
 }
