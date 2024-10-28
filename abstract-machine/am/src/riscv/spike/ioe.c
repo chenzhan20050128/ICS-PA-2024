@@ -1,5 +1,4 @@
 #include <am.h>
-#include <klib.h> //add by cz at 1028 13:32
 #include <klib-macros.h>
 
 void __am_timer_init();

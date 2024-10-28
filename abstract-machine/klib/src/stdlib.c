@@ -6,12 +6,12 @@
 static unsigned long int next = 1;
 
 // 保存当前分配内存的起始位置
-static uintptr_t addr;
+extern uintptr_t addr;
 
 // 初始化堆起始地址 add by cz at 1026 20:31
-void init_heap()
+extern void init_heap()
 {
-  addr = (uintptr_t)heap.start;
+  addr = get_heap_start;
 }
 
 // 实现简单的 malloc() 函数

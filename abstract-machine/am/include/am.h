@@ -89,4 +89,5 @@ extern "C"
 
 #endif
 
-void init_heap(); // add by cz
+void init_heap();           // add by cz
+uintptr_t get_heap_start(); // add by cz
