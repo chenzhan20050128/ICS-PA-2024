@@ -6,7 +6,7 @@
 static unsigned long int next = 1;
 
 // 保存当前分配内存的起始位置
-static uintptr_t addr = 0;
+static uintptr_t addr;
 
 // 初始化堆起始地址 add by cz at 1026 20:31
 void init_heap()
