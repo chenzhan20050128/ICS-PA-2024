@@ -1,16 +1,16 @@
 #include <am.h>
 #include <nemu.h>
-
+#include <stdio.h>
 void __am_timer_init()
 {
 }
 
 void __am_timer_uptime(AM_TIMER_UPTIME_T *uptime)
 {
-  // 读取32位的RTC寄存器来获取当前系统时间的微秒数
-  uint32_t lo = inl(RTC_ADDR);     // 低32位
-  uint32_t hi = inl(RTC_ADDR + 4); // 高32位
-  uptime->us = ((uint64_t)hi << 32) | lo;
+  // printf("%d \n", RTC_ADDR);
+  uint64_t temp = ((uint64_t)inl(RTC_ADDR + 4) << 32) | (uint64_t)inl(RTC_ADDR);
+  printf("%d %d\n", RTC_ADDR, temp);
+  uptime->us = temp;
 }
 
 void __am_timer_rtc(AM_TIMER_RTC_T *rtc)
