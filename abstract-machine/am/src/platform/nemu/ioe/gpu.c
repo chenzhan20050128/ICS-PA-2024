@@ -63,6 +63,7 @@ void __am_gpu_memcpy(AM_GPU_MEMCPY_T *params)
   {
     *dst = *src;
   }
+  // 处理剩余不足4字节的数据
   char *c_src = (char *)src, *c_dst = (char *)dst;
   for (int i = 0; i < (params->size & 3); i++)
   {

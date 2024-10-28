@@ -48,7 +48,7 @@
 // 帧缓冲区地址，用于图形输出
 
 #define AUDIO_SBUF_ADDR (MMIO_BASE + 0x1200000)
-// 音频缓冲区地址，用于音频数据缓存
+// 音频缓冲区地址，用于音频数据缓存 64KB space
 
 extern char _pmem_start;
 #define PMEM_SIZE (128 * 1024 * 1024)

@@ -33,9 +33,15 @@ AM_DEVREG(11, GPU_FBDRAW, WR, int x, y; void *pixels; int w, h; bool sync);
 AM_DEVREG(12, GPU_MEMCPY, WR, uint32_t dest; void *src; int size);
 AM_DEVREG(13, GPU_RENDER, WR, uint32_t root);
 AM_DEVREG(14, AUDIO_CONFIG, RD, bool present; int bufsize);
-AM_DEVREG(15, AUDIO_CTRL, WR, int freq, channels, samples);
+AM_DEVREG(15, AUDIO_CTRL, WR, int freq, channels, samples); // 采样率，channels,每次周期缓冲区大小
 AM_DEVREG(16, AUDIO_STATUS, RD, int count);
 AM_DEVREG(17, AUDIO_PLAY, WR, Area buf);
+/*在AM中, abstract-machine/am/include/amdev.h中为声卡定义了四个抽象寄存器:
+
+AM_AUDIO_CONFIG, AM声卡控制器信息, 可读出存在标志present以及流缓冲区的大小bufsize. 另外AM假设系统在运行过程中, 流缓冲区的大小不会发生变化.
+AM_AUDIO_CTRL, AM声卡控制寄存器, 可根据写入的freq, channels和samples对声卡进行初始化.
+AM_AUDIO_STATUS, AM声卡状态寄存器, 可读出当前流缓冲区已经使用的大小count.
+AM_AUDIO_PLAY, AM声卡播放寄存器, 可将[buf.start, buf.end)区间的内容作为音频数据写入流缓冲区. 若当前流缓冲区的空闲空间少于即将写入的音频数据, 此次写入将会一直等待, 直到有足够的空闲空间将音频数据完全写入流缓冲区才会返回.*/
 AM_DEVREG(18, DISK_CONFIG, RD, bool present; int blksz, blkcnt);
 AM_DEVREG(19, DISK_STATUS, RD, bool ready);
 AM_DEVREG(20, DISK_BLKIO, WR, bool write; void *buf; int blkno, blkcnt);
@@ -49,7 +55,9 @@ AM_DEVREG(24, NET_RX, WR, Area buf);
 #define AM_KEYS(_)                                                                                             \
   _(ESCAPE)                                                                                                    \
   _(F1)                                                                                                        \
-  _(F2) _(F3) _(F4) _(F5) _(F6) _(F7) _(F8) _(F9) _(F10) _(F11) _(F12)                                         \
+  _(F2)                                                                                                        \
+  _(F3)                                                                                                        \
+  _(F4) _(F5) _(F6) _(F7) _(F8) _(F9) _(F10) _(F11) _(F12)                                                     \
       _(GRAVE) _(1) _(2) _(3) _(4) _(5) _(6) _(7) _(8) _(9) _(0) _(MINUS) _(EQUALS) _(BACKSPACE)               \
           _(TAB) _(Q) _(W) _(E) _(R) _(T) _(Y) _(U) _(I) _(O) _(P) _(LEFTBRACKET) _(RIGHTBRACKET) _(BACKSLASH) \
               _(CAPSLOCK) _(A) _(S) _(D) _(F) _(G) _(H) _(J) _(K) _(L) _(SEMICOLON) _(APOSTROPHE) _(RETURN)    \

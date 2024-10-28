@@ -11,7 +11,7 @@ extern uintptr_t addr;
 // 初始化堆起始地址 add by cz at 1026 20:31
 extern void init_heap()
 {
-  addr = get_heap_start;
+  addr = (uintptr_t)heap.start;
 }
 
 // 实现简单的 malloc() 函数
