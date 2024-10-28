@@ -20,7 +20,7 @@ void __am_audio_init()
 // 配置音频函数，设置音频设备的初始配置
 void __am_audio_config(AM_AUDIO_CONFIG_T *cfg)
 {
-  cfg->present = false; // 假定音频设备未准备好
+  cfg->present = true; // change by cz at 1028 19:43
 }
 
 // 控制音频函数，配置音频的频率、通道数、采样数，启动音频设备
