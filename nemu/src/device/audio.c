@@ -18,7 +18,7 @@
 #include <SDL2/SDL.h>   // 包含SDL库，用于音频处理
 #include <stdbool.h>
 #include <stdint.h>
-#define CONFIG_SB_SIZE_CZ 0x10000000 // add by cz to test, 1028 21:25
+#define CONFIG_SB_SIZE_CZ 0x100000 // add by cz to test, 1028 21:25
 // 宏定义，用于获取两个数的最小值
 #define min(x, y) ((x < y) ? x : y)
 
