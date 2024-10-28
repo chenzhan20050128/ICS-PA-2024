@@ -1,3 +1,5 @@
+// software
+
 #include <am.h>   // 包含 AM 框架的头文件
 #include <nemu.h> // 包含 NEMU 模拟器的头文件
 #include <klib.h> // 包含内核库接口的头文件
