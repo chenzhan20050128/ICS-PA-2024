@@ -37,6 +37,7 @@ typedef struct
   uintptr_t cause, ref;
   const char *msg;
 } Event;
+/*其中event表示事件编号, cause和ref是一些描述事件的补充信息, msg是事件信息字符串, 我们在PA中只会用到event. */
 
 // A protected address space with user memory @area
 // and arch-dependent @ptr
